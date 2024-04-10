@@ -40,6 +40,10 @@ public class ListFoodActivity extends BaseActivity {
 
         getIntentExtra();
         initList();
+        setVariable();
+    }
+
+    private void setVariable() {
     }
 
     private void initList() {
@@ -48,7 +52,7 @@ public class ListFoodActivity extends BaseActivity {
         ArrayList<Foods>  list = new ArrayList<>();
         Query query;
         if(isSearch){
-            query=myRef.orderByChild("Title").startAt(searchText+"\uf8ff");
+            query=myRef.orderByChild("Title").startAt(searchText).endAt(searchText+'\uf8ff');
         }
         else {
             query=myRef.orderByChild("CategoryId").equalTo(categoryId);
