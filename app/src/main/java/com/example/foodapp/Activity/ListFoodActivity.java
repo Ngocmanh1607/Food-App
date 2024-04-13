@@ -32,6 +32,7 @@ public class ListFoodActivity extends BaseActivity {
     private String categoryName;
     private String searchText;
     private Boolean isSearch;
+    private boolean listFood;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,8 +54,10 @@ public class ListFoodActivity extends BaseActivity {
         Query query;
         if(isSearch){
             query=myRef.orderByChild("Title").startAt(searchText).endAt(searchText+'\uf8ff');
-        }
-        else {
+        } else if (listFood) {
+            binding.titleTxt.setText("List Food");
+            query=myRef;
+        } else {
             query=myRef.orderByChild("CategoryId").equalTo(categoryId);
         }
         query.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -84,7 +87,7 @@ public class ListFoodActivity extends BaseActivity {
         categoryName=getIntent().getStringExtra("CategoryName");
         searchText=getIntent().getStringExtra("text");
         isSearch=getIntent().getBooleanExtra("isSearch",false);
-
+        listFood=getIntent().getBooleanExtra("listFood",false);
         binding.titleTxt.setText(categoryName);
         binding.backBtn.setOnClickListener(v-> finish());
     }

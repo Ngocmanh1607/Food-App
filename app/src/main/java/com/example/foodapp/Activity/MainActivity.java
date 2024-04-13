@@ -74,6 +74,14 @@ public class MainActivity extends BaseActivity {
                 startActivity(new Intent(MainActivity.this, CartActivity.class));
             }
         });
+        binding.viewallText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(MainActivity.this, ListFoodActivity.class);
+                intent.putExtra("listFood",true);
+                startActivity(intent);
+            }
+        });
 
     }
 
