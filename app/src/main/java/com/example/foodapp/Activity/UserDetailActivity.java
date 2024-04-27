@@ -3,6 +3,8 @@ package com.example.foodapp.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -23,6 +25,9 @@ import com.google.firebase.database.ValueEventListener;
 
 public class UserDetailActivity extends BaseActivity {
     ActivityUserDetailBinding binding;
+    DatabaseReference userRef;
+    boolean isEditing = false; // Biến để theo dõi trạng thái chỉnh sửa
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,8 +39,7 @@ public class UserDetailActivity extends BaseActivity {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             String userId = currentUser.getUid();
-
-            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("User").child(userId);
+            userRef = FirebaseDatabase.getInstance().getReference().child("User").child(userId);
             userRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -61,5 +65,51 @@ public class UserDetailActivity extends BaseActivity {
                 }
             });
         }
+        binding.EditBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!isEditing) {
+                    // Chuyển sang chế độ chỉnh sửa
+                    binding.EditBtn.setText("Save");
+                    change(true);
+                } else {
+                    // Thực hiện lưu thông tin người dùng
+                    saveUserInfo();
+                }
+                // Đảo ngược trạng thái chỉnh sửa
+                isEditing = !isEditing;
+            }
+        });
+    }
+
+    private void saveUserInfo() {
+        // Lấy các giá trị mới từ các EditText
+        String newName = binding.NameTxt.getText().toString();
+        String newGender = binding.GenderTxt.getText().toString();
+        String newPhone = binding.PhoneTxt.getText().toString();
+        String newBirthday = binding.BrithdayTxt.getText().toString();
+        String newLocation = binding.AddressTxt.getText().toString();
+
+        // Cập nhật các trường thông tin của người dùng trên Firebase
+        userRef.child("Name").setValue(newName);
+        userRef.child("Gender").setValue(newGender);
+        userRef.child("Phone").setValue(newPhone);
+        userRef.child("Birthday").setValue(newBirthday);
+        userRef.child("Location").setValue(newLocation);
+
+        // Thông báo cập nhật thành công
+        Toast.makeText(UserDetailActivity.this, "Profile updated successfully", Toast.LENGTH_SHORT).show();
+
+        // Chuyển về chế độ chỉnh sửa
+        binding.EditBtn.setText("Edit");
+        change(false);
+    }
+
+    private void change(boolean text){
+        binding.NameTxt.setEnabled(text);
+        binding.PhoneTxt.setEnabled(text);
+        binding.GenderTxt.setEnabled(text);
+        binding.AddressTxt.setEnabled(text);
+        binding.BrithdayTxt.setEnabled(text);
     }
 }

@@ -81,7 +81,7 @@ public class SignupActivity extends BaseActivity {
     private void saveUserToDatabase(String userId, String name, String email, String gender, String phone, String birthday,String location) {
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
         DatabaseReference usersRef = mDatabase.child("User").child(userId);
-
+        usersRef.child("Role").setValue("false");
         usersRef.child("Name").setValue(name);
         usersRef.child("Email").setValue(email);
         usersRef.child("Gender").setValue(gender);
