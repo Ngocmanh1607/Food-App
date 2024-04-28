@@ -1,0 +1,23 @@
+<!-- bottom_navigation_item.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true">
+        <layer-list>
+            <item
+                android:drawable="@drawable/ic_home"
+                android:gravity="top|center_horizontal" />
+            <item
+                android:text="Home"
+                android:gravity="bottom|center_horizontal" />
+        </layer-list>
+    </item>
+    <item android:state_checked="false">
+        <layer-list>
+            <item
+                android:drawable="@drawable/ic_home"
+                android:gravity="top|center_horizontal" />
+            <item
+                android:text="Home"
+                android:gravity="bottom|center_horizontal" />
+        </layer-list>
+    </item>
+</selector>
