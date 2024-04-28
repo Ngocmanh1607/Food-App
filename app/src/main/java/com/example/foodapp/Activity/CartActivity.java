@@ -1,21 +1,43 @@
 package com.example.foodapp.Activity;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.foodapp.Adapter.CartAdapter;
+import com.example.foodapp.Domain.Foods;
+import com.example.foodapp.Domain.Order;
+import com.example.foodapp.Domain.OrderItem;
 import com.example.foodapp.Helper.ManagmentCart;
 import com.example.foodapp.databinding.ActivityCartBinding;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 public class CartActivity extends AppCompatActivity {
     private ActivityCartBinding binding;
     private RecyclerView.Adapter adapter;
     private ManagmentCart managmentCart;
+    private DatabaseReference ordersRef;
     private double tax;
+    private double total;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,7 +74,7 @@ public class CartActivity extends AppCompatActivity {
 
         tax=Math.round(managmentCart.getTotalFee()*percenTax*100.0)/100;
 
-        double total = Math.round((managmentCart.getTotalFee()+tax+delivery)*100)/100;
+        total = Math.round((managmentCart.getTotalFee()+tax+delivery)*100)/100;
         double itemTotal=Math.round(managmentCart.getTotalFee()*100)/100;
 
         binding.totalFeeTxt.setText("$"+itemTotal);
@@ -63,5 +85,97 @@ public class CartActivity extends AppCompatActivity {
 
     private void setVariable() {
         binding.backBtn.setOnClickListener(v->finish());
+
+        binding.oderBtn.setOnClickListener(v -> placeOrder());
+    }
+
+    private void placeOrder() {
+        if (!managmentCart.getListCart().isEmpty()) {
+            // Kiểm tra xem người dùng đã đăng nhập hay chưa
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                String userId = currentUser.getUid(); // Lấy ID của người dùng đã đăng nhập
+
+                // Lấy thông tin người dùng từ Firebase Realtime Database
+                DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("User").child(userId);
+                userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            String userName = dataSnapshot.child("Name").getValue(String.class);
+                            String phone = dataSnapshot.child("Phone").getValue(String.class);
+                            String location = dataSnapshot.child("Location").getValue(String.class);
+
+                            // Tạo đối tượng Order từ thông tin người dùng và danh sách món ăn trong giỏ hàng
+                            Order order = new Order();
+                            order.setUserName(userName);
+                            order.setPhone(phone);
+                            order.setLocation(location);
+
+                            // Lấy danh sách món ăn từ giỏ hàng
+                            List<Foods> cartItems = managmentCart.getListCart();
+
+                            // Tạo danh sách mới chứa thông tin đơn hàng
+                            List<OrderItem> orderItems = new ArrayList<>();
+                            for (Foods item : cartItems) {
+                                // Tạo đối tượng OrderItem với thông tin tên, số lượng và ngày giờ đặt hàng
+                                OrderItem orderItem = new OrderItem(item.getTitle(), item.getNumberInCart());
+                                orderItems.add(orderItem);
+                            }
+                            order.setlOrderItem(orderItems);
+                            order.setTotalPrice(total);
+                            // Đặt ngày giờ đặt hàng vào đơn hàng
+                            String currentDateTime = getCurrentDateTime();
+                            order.setDateTime(currentDateTime);
+                            // Tham chiếu đến Firebase Realtime Database và lưu đơn hàng
+                            DatabaseReference ordersRef = FirebaseDatabase.getInstance().getReference().child("Orders");
+                            String orderId = ordersRef.push().getKey();
+                            if (orderId != null) {
+                                ordersRef.child(orderId).setValue(order)
+                                        .addOnSuccessListener(aVoid -> {
+                                            // Xóa giỏ hàng sau khi đặt hàng thành công
+                                            managmentCart.clearCart();
+
+                                            // Hiển thị thông báo thành công
+                                            Toast.makeText(CartActivity.this, "Order placed successfully!", Toast.LENGTH_SHORT).show();
+
+                                            // Chuyển người dùng đến màn hình khác sau khi đặt hàng thành công
+                                            Intent intent = new Intent(CartActivity.this, MainActivity.class);
+                                            startActivity(intent);
+                                            finish(); // Kết thúc hoạt động hiện tại
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Log.e("CartActivity", "Failed to place order: " + e.getMessage());
+                                            Toast.makeText(CartActivity.this, "Failed to place order. Please try again!", Toast.LENGTH_SHORT).show();
+                                        });
+                            }
+                        } else {
+                            Log.e("CartActivity", "User data not found in Firebase Realtime Database.");
+                            Toast.makeText(CartActivity.this, "User data not found. Please try again!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("CartActivity", "Firebase Database Error: " + databaseError.getMessage());
+                        Toast.makeText(CartActivity.this, "Firebase Database Error. Please try again!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } else {
+                Toast.makeText(CartActivity.this, "User not authenticated. Please login again!", Toast.LENGTH_SHORT).show();
+                // Redirect to login screen if user is not authenticated
+                startActivity(new Intent(CartActivity.this, LoginActivity.class));
+                finish(); // Kết thúc hoạt động hiện tại
+            }
+        } else {
+            // Hiển thị thông báo nếu giỏ hàng của người dùng đang trống
+            Toast.makeText(CartActivity.this, "Your cart is empty!", Toast.LENGTH_SHORT).show();
+        }
+    }
+    // Phương thức để lấy ngày giờ hiện tại
+    private String getCurrentDateTime() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        Date date = new Date();
+        return dateFormat.format(date);
     }
 }
