@@ -56,8 +56,9 @@ public class SignupActivity extends BaseActivity {
                         if (task.isSuccessful()) {
                             FirebaseUser user = mAuth.getCurrentUser();
                             if (user != null) {
+                                Boolean role=false;
                                 // Save user details to Realtime Database
-                                saveUserToDatabase(user.getUid(), name, email, gender, phone, birthday,location);
+                                saveUserToDatabase(user.getUid(), name, email, gender, phone, birthday,location,role);
 
                                 Log.d(TAG, "User details saved to Realtime Database");
 
@@ -78,10 +79,10 @@ public class SignupActivity extends BaseActivity {
         });
     }
 
-    private void saveUserToDatabase(String userId, String name, String email, String gender, String phone, String birthday,String location) {
+    private void saveUserToDatabase(String userId, String name, String email, String gender, String phone, String birthday,String location,Boolean role) {
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
         DatabaseReference usersRef = mDatabase.child("User").child(userId);
-        usersRef.child("Role").setValue("false");
+        usersRef.child("Role").setValue(role);
         usersRef.child("Name").setValue(name);
         usersRef.child("Email").setValue(email);
         usersRef.child("Gender").setValue(gender);

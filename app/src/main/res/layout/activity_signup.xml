@@ -150,18 +150,17 @@
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/signupBtn"
+                style="@android:style/Widget.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Signup"
-                android:background="@drawable/red_button_background"
                 android:layout_marginStart="32dp"
-                android:layout_marginEnd="32dp"
                 android:layout_marginTop="16dp"
-                style="@android:style/Widget.Button"
+                android:layout_marginEnd="32dp"
+                android:background="@drawable/red_button_background"
+                android:text="Signup"
                 android:textColor="@color/white"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                />
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
