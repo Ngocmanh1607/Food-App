@@ -4,6 +4,16 @@ import java.util.Date;
 import java.util.List;
 
 public class Order {
+    private String key;
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
     private String userName;
     private String phone;
     private String location;

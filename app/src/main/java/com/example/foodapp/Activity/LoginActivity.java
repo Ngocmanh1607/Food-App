@@ -86,7 +86,7 @@ public class LoginActivity extends BaseActivity {
                     boolean role = dataSnapshot.child("Role").getValue(Boolean.class);
                     if (role) {
                         // Người dùng là admin, chuyển hướng đến màn hình hoạt động của admin
-                        startActivity(new Intent(LoginActivity.this, ListOrderActivity.class));
+                        startActivity(new Intent(LoginActivity.this, MainResActivity.class));
                     } else {
                         // Người dùng không phải là admin, chuyển hướng đến màn hình hoạt động của người dùng thông thường
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));

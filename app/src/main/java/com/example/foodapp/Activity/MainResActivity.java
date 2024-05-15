@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.example.foodapp.Fragment.ListFoodFragment;
+import com.example.foodapp.Activity.ListFoodFragment;
 import com.example.foodapp.R;
 import com.example.foodapp.databinding.ActivityMainResBinding;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -39,7 +39,7 @@ public class MainResActivity extends BaseActivity {
                         selectedFragment = ListFoodFragment.newInstance();
                         break;
                     case R.id.menu_listOrder:
-                        //selectedFragment = ListOrderFragment.newInstance();
+                        selectedFragment = ListOrderFragment.newInstance();
                         break;
                     case R.id.menu_staff:
                         //selectedFragment = StaffFragment.newInstance();

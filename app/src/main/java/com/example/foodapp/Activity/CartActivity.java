@@ -106,7 +106,6 @@ public class CartActivity extends AppCompatActivity {
                             String phone = dataSnapshot.child("Phone").getValue(String.class);
                             String location = dataSnapshot.child("Location").getValue(String.class);
 
-                            // Tạo đối tượng Order từ thông tin người dùng và danh sách món ăn trong giỏ hàng
                             Order order = new Order();
                             order.setUserName(userName);
                             order.setPhone(phone);
@@ -119,7 +118,7 @@ public class CartActivity extends AppCompatActivity {
                             List<OrderItem> orderItems = new ArrayList<>();
                             for (Foods item : cartItems) {
                                 // Tạo đối tượng OrderItem với thông tin tên, số lượng và ngày giờ đặt hàng
-                                OrderItem orderItem = new OrderItem(item.getTitle(), item.getNumberInCart());
+                                OrderItem orderItem = new OrderItem(item.getTitle(), item.getNumberInCart(),item.getImagePath());
                                 orderItems.add(orderItem);
                             }
                             order.setlOrderItem(orderItems);
@@ -130,19 +129,17 @@ public class CartActivity extends AppCompatActivity {
                             // Tham chiếu đến Firebase Realtime Database và lưu đơn hàng
                             DatabaseReference ordersRef = FirebaseDatabase.getInstance().getReference().child("Orders");
                             String orderId = ordersRef.push().getKey();
+                            order.setKey(orderId);
                             if (orderId != null) {
                                 ordersRef.child(orderId).setValue(order)
                                         .addOnSuccessListener(aVoid -> {
-                                            // Xóa giỏ hàng sau khi đặt hàng thành công
                                             managmentCart.clearCart();
 
-                                            // Hiển thị thông báo thành công
                                             Toast.makeText(CartActivity.this, "Order placed successfully!", Toast.LENGTH_SHORT).show();
 
-                                            // Chuyển người dùng đến màn hình khác sau khi đặt hàng thành công
                                             Intent intent = new Intent(CartActivity.this, MainActivity.class);
                                             startActivity(intent);
-                                            finish(); // Kết thúc hoạt động hiện tại
+                                            finish();
                                         })
                                         .addOnFailureListener(e -> {
                                             Log.e("CartActivity", "Failed to place order: " + e.getMessage());
@@ -163,16 +160,13 @@ public class CartActivity extends AppCompatActivity {
                 });
             } else {
                 Toast.makeText(CartActivity.this, "User not authenticated. Please login again!", Toast.LENGTH_SHORT).show();
-                // Redirect to login screen if user is not authenticated
                 startActivity(new Intent(CartActivity.this, LoginActivity.class));
-                finish(); // Kết thúc hoạt động hiện tại
+                finish();
             }
         } else {
-            // Hiển thị thông báo nếu giỏ hàng của người dùng đang trống
             Toast.makeText(CartActivity.this, "Your cart is empty!", Toast.LENGTH_SHORT).show();
         }
     }
-    // Phương thức để lấy ngày giờ hiện tại
     private String getCurrentDateTime() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         Date date = new Date();
