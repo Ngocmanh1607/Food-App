@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,10 +35,10 @@ public class ListFoodFragment extends Fragment {
         return new ListFoodFragment();
     }
 
+    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_list_food, container, false);
 
         recyclerView = view.findViewById(R.id.foodListView);
@@ -66,12 +67,16 @@ public class ListFoodFragment extends Fragment {
                     // Create and set adapter for RecyclerView
                     adapterListFood = new FoodListResAdapter(list);
                     recyclerView.setAdapter(adapterListFood);
+
+                    // Notify adapter that data has changed
+                    adapterListFood.notifyDataSetChanged();
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 // Handle possible error scenario
+                // For example, show a toast message or log the error
             }
         });
     }

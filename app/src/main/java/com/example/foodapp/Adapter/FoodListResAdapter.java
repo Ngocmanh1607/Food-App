@@ -15,6 +15,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.example.foodapp.Activity.DetailActivity;
+import com.example.foodapp.Activity.DetailResActivity;
 import com.example.foodapp.Domain.Foods;
 import com.example.foodapp.R;
 import com.google.firebase.database.FirebaseDatabase;
@@ -52,7 +53,7 @@ public class FoodListResAdapter extends RecyclerView.Adapter<FoodListResAdapter.
 
         // Handle item click
         holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(context, DetailActivity.class);
+            Intent intent = new Intent(context, DetailResActivity.class);
             intent.putExtra("object", food); // Pass food object to detail activity
             context.startActivity(intent);
         });
