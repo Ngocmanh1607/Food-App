@@ -1,18 +1,23 @@
 package com.example.foodapp.Activity;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.example.foodapp.R;
 import com.example.foodapp.databinding.ActivityUserDetailBinding;
 import com.google.firebase.auth.FirebaseAuth;
@@ -22,19 +27,95 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
-public class UserDetailActivity extends BaseActivity {
+public class UserDetailActivity extends AppCompatActivity {
+    private static final int REQUEST_CODE_PERMISSIONS = 101;
+    private static final int REQUEST_CODE_GALLERY = 102;
+
     ActivityUserDetailBinding binding;
     DatabaseReference userRef;
     boolean isEditing = false; // Biến để theo dõi trạng thái chỉnh sửa
-
+    private Uri selectedImageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding= ActivityUserDetailBinding.inflate(getLayoutInflater());
+        binding = ActivityUserDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        initializeUserData();
+
+        binding.EditBtn.setOnClickListener(v -> {
+            if (!isEditing) {
+                binding.EditBtn.setText("Save");
+
+                binding.imgUser.setOnClickListener(v1 -> openGallery());
+                change(true);
+            } else {
+                saveUserInfo();
+            }
+            isEditing = !isEditing;
+        });
+
+        binding.listOrderTxt.setOnClickListener(v -> {
+            Intent intent = new Intent(UserDetailActivity.this, ListUserOrderActivity.class);
+            startActivity(intent);
+        });
+        binding.btnBack.setOnClickListener(v -> finish());
+    }
+
+    private void openGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, REQUEST_CODE_GALLERY);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null) {
+            selectedImageUri = data.getData();
+            if (selectedImageUri != null) {
+                Glide.with(UserDetailActivity.this)
+                        .load(selectedImageUri)
+                        .error(R.drawable.account_staff)
+                        .fitCenter()
+                        .transform(new CircleCrop()) // Áp dụng hình tròn cho ảnh
+                        .into(binding.imgUser);
+                uploadImageToFirebaseStorage(selectedImageUri);
+            }
+        }
+    }
+
+    private void uploadImageToFirebaseStorage(Uri imageUri) {
+        if (imageUri != null) {
+            StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("UserImages/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + ".jpg");
+            storageRef.putFile(imageUri).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        String imageUrl = uri.toString();
+                        // Update the image URL in the Firebase Realtime Database
+                        userRef.child("urlImg").setValue(imageUrl, (error, ref) -> {
+                            if (error == null) {
+                                Toast.makeText(UserDetailActivity.this, "Profile image updated successfully", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(UserDetailActivity.this, "Failed to update profile image", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }).addOnFailureListener(e -> {
+                        Toast.makeText(UserDetailActivity.this, "Failed to retrieve image URL", Toast.LENGTH_SHORT).show();
+                    });
+                } else {
+                    Toast.makeText(UserDetailActivity.this, "Image upload failed", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            Toast.makeText(UserDetailActivity.this, "Please select an image", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void initializeUserData() {
         // Lấy UID của người dùng hiện tại
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
@@ -50,41 +131,28 @@ public class UserDetailActivity extends BaseActivity {
                         String phone = dataSnapshot.child("Phone").getValue(String.class);
                         String birthday = dataSnapshot.child("Birthday").getValue(String.class);
                         String location = dataSnapshot.child("Location").getValue(String.class);
+                        String url = dataSnapshot.child("urlImg").getValue(String.class);
 
                         binding.NameTxt.setText(name);
                         binding.GenderTxt.setText(gender);
                         binding.PhoneTxt.setText(phone);
                         binding.BrithdayTxt.setText(birthday);
                         binding.AddressTxt.setText(location);
+                        Glide.with(UserDetailActivity.this)
+                                .load(url)
+                                .error(R.drawable.account_staff)
+                                .fitCenter()
+                                .transform(new CircleCrop()) // Áp dụng hình tròn cho ảnh
+                                .into(binding.imgUser);
                     }
                 }
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-                    Log.e(TAG, "User registration failed");
+                    Log.e("UserDetailActivity", "User data load cancelled", error.toException());
                 }
             });
         }
-        binding.EditBtn.setOnClickListener(v -> {
-            if (!isEditing) {
-                // Chuyển sang chế độ chỉnh sửa
-                binding.EditBtn.setText("Save");
-                change(true);
-            } else {
-                // Thực hiện lưu thông tin người dùng
-                saveUserInfo();
-            }
-            // Đảo ngược trạng thái chỉnh sửa
-            isEditing = !isEditing;
-        });
-
-        binding.listOrderTxt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(UserDetailActivity.this, ListUserOrderActivity.class);
-                startActivity(intent);
-            }
-        });
     }
 
     private void saveUserInfo() {
@@ -110,7 +178,7 @@ public class UserDetailActivity extends BaseActivity {
         change(false);
     }
 
-    private void change(boolean text){
+    private void change(boolean text) {
         binding.NameTxt.setEnabled(text);
         binding.PhoneTxt.setEnabled(text);
         binding.GenderTxt.setEnabled(text);

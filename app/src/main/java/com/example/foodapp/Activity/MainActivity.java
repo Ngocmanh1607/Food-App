@@ -104,7 +104,6 @@ public class MainActivity extends BaseActivity {
         ArrayList<Foods> list = new ArrayList<>();
 
         Query query = myRef.orderByChild("PriceId").equalTo(selectedPrice.getId());
-
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
