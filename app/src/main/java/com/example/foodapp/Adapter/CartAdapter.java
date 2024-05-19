@@ -45,7 +45,6 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.viewholder>
         holder.feeEachItem.setText("$"+list.get(position).getNumberInCart()*list.get(position).getPrice());
         holder.totalEachItem.setText(list.get(position).getNumberInCart()+"*$"+(list.get(position).getPrice()));
         holder.num.setText(list.get(position).getNumberInCart()+"");
-
         Glide.with(holder.itemView.getContext()).load(list.get(position).getImagePath()).transform(new CenterCrop(),new RoundedCorners(30)).into(holder.pic);
 
         holder.plusItem.setOnClickListener(v -> managmentCart.plusNumberItem(list, position, () -> {
@@ -57,6 +56,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.viewholder>
             notifyDataSetChanged();
             changeNumberItemsListener.change();
         }));
+
     }
 
     @Override
@@ -66,12 +66,12 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.viewholder>
 
     public class viewholder extends RecyclerView.ViewHolder{
 
-        TextView title,feeEachItem,plusItem,minusItem;
+        TextView title,feeEachItem,plusItem,minusItem,note;
         ImageView pic;
         TextView totalEachItem,num;
         public viewholder(@NonNull View itemView) {
             super(itemView);
-
+            note=itemView.findViewById(R.id.noteTxt);
             title=itemView.findViewById(R.id.titleTxt);
             pic=itemView.findViewById(R.id.pic);
             feeEachItem=itemView.findViewById(R.id.feeEachItem);

@@ -65,19 +65,24 @@ public class UserDetailActivity extends BaseActivity {
                 }
             });
         }
-        binding.EditBtn.setOnClickListener(new View.OnClickListener() {
+        binding.EditBtn.setOnClickListener(v -> {
+            if (!isEditing) {
+                // Chuyển sang chế độ chỉnh sửa
+                binding.EditBtn.setText("Save");
+                change(true);
+            } else {
+                // Thực hiện lưu thông tin người dùng
+                saveUserInfo();
+            }
+            // Đảo ngược trạng thái chỉnh sửa
+            isEditing = !isEditing;
+        });
+
+        binding.listOrderTxt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!isEditing) {
-                    // Chuyển sang chế độ chỉnh sửa
-                    binding.EditBtn.setText("Save");
-                    change(true);
-                } else {
-                    // Thực hiện lưu thông tin người dùng
-                    saveUserInfo();
-                }
-                // Đảo ngược trạng thái chỉnh sửa
-                isEditing = !isEditing;
+                Intent intent = new Intent(UserDetailActivity.this, ListUserOrderActivity.class);
+                startActivity(intent);
             }
         });
     }

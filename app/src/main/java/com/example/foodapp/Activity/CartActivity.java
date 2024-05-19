@@ -110,7 +110,8 @@ public class CartActivity extends AppCompatActivity {
                             order.setUserName(userName);
                             order.setPhone(phone);
                             order.setLocation(location);
-
+                            order.setStatus(Order.Status.PENDING);
+                            order.setNote(binding.noteTxt.getText().toString());
                             // Lấy danh sách món ăn từ giỏ hàng
                             List<Foods> cartItems = managmentCart.getListCart();
 
@@ -123,7 +124,6 @@ public class CartActivity extends AppCompatActivity {
                             }
                             order.setlOrderItem(orderItems);
                             order.setTotalPrice(total);
-                            // Đặt ngày giờ đặt hàng vào đơn hàng
                             String currentDateTime = getCurrentDateTime();
                             order.setDateTime(currentDateTime);
                             // Tham chiếu đến Firebase Realtime Database và lưu đơn hàng

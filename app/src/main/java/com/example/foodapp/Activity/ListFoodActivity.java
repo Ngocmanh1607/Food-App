@@ -38,7 +38,6 @@ public class ListFoodActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         binding=ActivityListFoodBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
         getIntentExtra();
         initList();
         setVariable();

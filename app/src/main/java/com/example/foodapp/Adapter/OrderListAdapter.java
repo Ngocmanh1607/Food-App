@@ -2,19 +2,27 @@ package com.example.foodapp.Adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.foodapp.Activity.DetailActivity;
 import com.example.foodapp.Activity.OrderDetailActivity;
 import com.example.foodapp.Domain.Order;
+import com.example.foodapp.Domain.OrderItem;
 import com.example.foodapp.R;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 
@@ -40,27 +48,70 @@ public class OrderListAdapter extends RecyclerView.Adapter<OrderListAdapter.View
         holder.phoneTxt.setText(order.getPhone());
         holder.locationTxt.setText(order.getLocation());
         holder.totalPriceTxt.setText("$" + order.getTotalPrice());
-        holder.acceptBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-            }
+        holder.noteTxt.setText(order.getNote());
+        if (order.getStatus()==Order.Status.ACCEPTED) {
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(context, R.color.green));
+            holder.rejectbtn.setVisibility(View.GONE);
+        }
+        else if (order.getStatus()==Order.Status.REJECTED){
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(context, R.color.red));
+            holder.acceptBtn.setVisibility(View.GONE);
+        }
+        else {
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(context, R.color.grey));
+            holder.acceptBtn.setVisibility(View.VISIBLE);
+            holder.rejectbtn.setVisibility(View.VISIBLE);
+        }
+
+        holder.acceptBtn.setOnClickListener(v -> {
+            int position13 = holder.getAdapterPosition();
+            Order orderItem = items.get(position13);
+
+            orderItem.setStatus(Order.Status.ACCEPTED);
+            String orderId = orderItem.getKey();
+
+            DatabaseReference orderRef = FirebaseDatabase.getInstance().getReference("Orders").child(orderId);
+
+            orderRef.child("status").setValue(Order.Status.ACCEPTED)
+                    .addOnSuccessListener(aVoid -> {
+                        Intent intent = new Intent(context, OrderDetailActivity.class);
+                        intent.putExtra("orderId", orderId);
+                        context.startActivity(intent);
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(context, "Failed to update status. Please try again.", Toast.LENGTH_SHORT).show();
+                    });
         });
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String key = items.get(holder.getAdapterPosition()).getKey();
+        holder.rejectbtn.setOnClickListener(v -> {
 
-                // Create an intent to start the OrderDetailActivity
-                Intent intent = new Intent(context, OrderDetailActivity.class);
+            int position12 = holder.getAdapterPosition();
+            Order orderItem = items.get(position12);
 
-                // Pass the order ID as an extra to the intent
-                intent.putExtra("orderId", key);
+            orderItem.setStatus(Order.Status.REJECTED);
+            String orderId = orderItem.getKey();
 
-                // Start the OrderDetailActivity
-                context.startActivity(intent);
-            }
+            DatabaseReference orderRef = FirebaseDatabase.getInstance().getReference("Orders").child(orderId);
+
+            orderRef.child("status").setValue(Order.Status.REJECTED)
+                    .addOnSuccessListener(aVoid -> {
+                        Intent intent = new Intent(context, OrderDetailActivity.class);
+                        intent.putExtra("orderId", orderId);
+                        context.startActivity(intent);
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(context, "Failed to update status. Please try again.", Toast.LENGTH_SHORT).show();
+                    });
         });
+        holder.itemView.setOnClickListener(v -> {
+            int position1 = holder.getAdapterPosition();
+            Order orderItem = items.get(position1);
 
+            orderItem.setStatus(Order.Status.REJECTED);
+            String orderId = orderItem.getKey();
+            Intent intent = new Intent(context, OrderDetailActivity.class);
+            intent.putExtra("orderId", orderId);
+            context.startActivity(intent);
+        });
     }
 
     @Override
@@ -69,7 +120,7 @@ public class OrderListAdapter extends RecyclerView.Adapter<OrderListAdapter.View
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        TextView userNameTxt, phoneTxt, locationTxt, totalPriceTxt;
+        TextView userNameTxt, phoneTxt, locationTxt, totalPriceTxt,noteTxt;
         Button acceptBtn,rejectbtn;
 
         public ViewHolder(@NonNull View itemView) {
@@ -78,6 +129,7 @@ public class OrderListAdapter extends RecyclerView.Adapter<OrderListAdapter.View
             phoneTxt = itemView.findViewById(R.id.phoneTxt);
             locationTxt = itemView.findViewById(R.id.locationTxt);
             totalPriceTxt = itemView.findViewById(R.id.totalPriceTxt);
+            noteTxt=itemView.findViewById(R.id.noteTxt);
             acceptBtn=itemView.findViewById(R.id.acceptBtn);
             rejectbtn=itemView.findViewById(R.id.rejectBtn);
         }

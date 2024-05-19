@@ -8,6 +8,17 @@
     tools:context=".Activity.UserDetailActivity">
 
     <ImageView
+        android:id="@+id/listOrderTxt"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@color/grey"
+        app:srcCompat="@drawable/list_food" />
+
+    <ImageView
         android:id="@+id/btn_back"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

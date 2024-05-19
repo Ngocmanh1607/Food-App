@@ -9,10 +9,6 @@
         android:title="List order"
         android:icon="@drawable/checklist_order" />
     <item
-        android:id="@+id/menu_staff"
-        android:title="Staff"
-        android:icon="@drawable/account_staff" />
-    <item
         android:id="@+id/menu_statistics"
         android:title="Statistics"
         android:icon="@drawable/thongke" />

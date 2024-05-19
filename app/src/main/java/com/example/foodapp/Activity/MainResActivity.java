@@ -29,33 +29,27 @@ public class MainResActivity extends BaseActivity {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
 
         // Set listener for item selection
-        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Fragment selectedFragment = null;
+        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
+            Fragment selectedFragment = null;
 
-                switch (item.getItemId()) {
-                    case R.id.menu_food:
-                        selectedFragment = ListFoodFragment.newInstance();
-                        break;
-                    case R.id.menu_listOrder:
-                        selectedFragment = ListOrderFragment.newInstance();
-                        break;
-                    case R.id.menu_staff:
-                        //selectedFragment = StaffFragment.newInstance();
-                        break;
-                    case R.id.menu_statistics:
-                        //selectedFragment = StatisticsFragment.newInstance();
-                        break;
-                }
-
-                if (selectedFragment != null) {
-                    replaceFragment(selectedFragment);
-                    return true;
-                }
-
-                return false;
+            switch (item.getItemId()) {
+                case R.id.menu_food:
+                    selectedFragment = ListFoodFragment.newInstance();
+                    break;
+                case R.id.menu_listOrder:
+                    selectedFragment = ListOrderFragment.newInstance();
+                    break;
+                case R.id.menu_statistics:
+                    //selectedFragment = StatisticsFragment.newInstance();
+                    break;
             }
+
+            if (selectedFragment != null) {
+                replaceFragment(selectedFragment);
+                return true;
+            }
+
+            return false;
         });
 
         // Set default fragment on first launch
