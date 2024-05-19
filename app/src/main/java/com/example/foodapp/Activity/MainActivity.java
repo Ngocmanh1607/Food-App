@@ -3,6 +3,7 @@ package com.example.foodapp.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 
 import androidx.activity.EdgeToEdge;
@@ -42,7 +43,6 @@ public class MainActivity extends BaseActivity {
         binding=ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        initLocation();
         initTime();
         initPrice();
 
@@ -56,41 +56,105 @@ public class MainActivity extends BaseActivity {
             FirebaseAuth.getInstance().signOut();
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
         });
-        binding.searchBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String text=binding.searchtext.getText().toString();
-                if((!text.isEmpty())){
-                    Intent intent=new Intent(MainActivity.this, ListFoodActivity.class);
-                    intent.putExtra("text",text);
-                    intent.putExtra("isSearch",true);
-                    startActivity(intent);
-                }
-            }
-        });
-        binding.cartBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, CartActivity.class));
-            }
-        });
-        binding.viewallText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        binding.searchBtn.setOnClickListener(v -> {
+            String text=binding.searchtext.getText().toString();
+            if((!text.isEmpty())){
                 Intent intent=new Intent(MainActivity.this, ListFoodActivity.class);
-                intent.putExtra("listFood",true);
+                intent.putExtra("text",text);
+                intent.putExtra("isSearch",true);
                 startActivity(intent);
             }
         });
-
-        binding.btnUser.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, UserDetailActivity.class));
-            }
+        binding.cartBtn.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, CartActivity.class)));
+        binding.viewallText.setOnClickListener(v -> {
+            Intent intent=new Intent(MainActivity.this, ListFoodActivity.class);
+            intent.putExtra("listFood",true);
+            startActivity(intent);
         });
 
+        binding.btnUser.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, UserDetailActivity.class)));
+        binding.timeSp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Time selectedTime = (Time) parent.getItemAtPosition(position);
+                filterFoodsByTime(selectedTime);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Do nothing
+            }
+        });
+        binding.priceSp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Price selectedPrice = (Price) parent.getItemAtPosition(position);
+                filterFoodsByPrice(selectedPrice);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Do nothing
+            }
+        });
     }
+
+    private void filterFoodsByPrice(Price selectedPrice) {
+        DatabaseReference myRef = database.getReference("Foods");
+        ArrayList<Foods> list = new ArrayList<>();
+
+        Query query = myRef.orderByChild("PriceId").equalTo(selectedPrice.getId());
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    for (DataSnapshot issue : snapshot.getChildren()) {
+                        list.add(issue.getValue(Foods.class));
+                    }
+                    if (list.size() > 0) {
+                        binding.bestFoodView.setLayoutManager(new LinearLayoutManager(MainActivity.this, LinearLayoutManager.HORIZONTAL, false));
+                        RecyclerView.Adapter adapter = new BestFoodAdapter(list);
+                        binding.bestFoodView.setAdapter(adapter);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Handle error
+            }
+        });
+    }
+
+    private void filterFoodsByTime(Time selectedTime) {
+        DatabaseReference myRef = database.getReference("Foods");
+        ArrayList<Foods> list = new ArrayList<>();
+
+        Query query = myRef.orderByChild("TimeId").equalTo(selectedTime.getId());
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    for (DataSnapshot issue : snapshot.getChildren()) {
+                        list.add(issue.getValue(Foods.class));
+                    }
+                    if (list.size() > 0) {
+                        binding.bestFoodView.setLayoutManager(new LinearLayoutManager(MainActivity.this, LinearLayoutManager.HORIZONTAL, false));
+                        RecyclerView.Adapter adapter = new BestFoodAdapter(list);
+                        binding.bestFoodView.setAdapter(adapter);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Handle error
+            }
+        });
+    }
+
 
     private void initBestFood() {
         DatabaseReference myRef=database.getReference("Foods");
@@ -148,30 +212,6 @@ public class MainActivity extends BaseActivity {
         });
 
     }
-
-    //lay location
-    private void initLocation() {
-        DatabaseReference myRef=database.getReference("Location");
-        ArrayList<Location> list=new ArrayList<>();
-        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists()){
-                    for(DataSnapshot issue : snapshot.getChildren()){
-                        list.add(issue.getValue(Location.class));
-                    }
-                    ArrayAdapter<Location> adapter = new ArrayAdapter<>(MainActivity.this,R.layout.sp_item,list);
-                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    binding.locationSp.setAdapter(adapter);
-                }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-    }
-
     private void initTime() {
         DatabaseReference myRef=database.getReference("Time");
         ArrayList<Time> list=new ArrayList<>();
