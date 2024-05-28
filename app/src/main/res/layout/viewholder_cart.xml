@@ -31,8 +31,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:text="Title"
-            android:textSize="16sp"
             android:textColor="@color/blue_grey"
+            android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@+id/pic"
             app:layout_constraintTop_toTopOf="@+id/pic" />
@@ -43,8 +43,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="$0"
-            android:textSize="16sp"
             android:textColor="@color/blue_grey"
+            android:textSize="16sp"
             app:layout_constraintStart_toStartOf="@+id/titleTxt"
             app:layout_constraintTop_toBottomOf="@+id/titleTxt" />
 
@@ -54,9 +54,9 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
             android:text="$0"
+            android:textColor="@color/red"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@color/red"
             app:layout_constraintBottom_toBottomOf="@+id/pic"
             app:layout_constraintEnd_toEndOf="parent" />
 
@@ -70,29 +70,28 @@
                 android:id="@+id/minusCartBtn"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
-                android:text="-"
                 android:background="@drawable/edittext_background"
+                android:gravity="center"
+                android:text="-"
                 android:textColor="@color/red"
                 android:textStyle="bold"
-                android:gravity="center"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
-                />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/numberItemTxt"
                 android:layout_width="24dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:textStyle="bold"
-                android:textSize="16sp"
+                android:text="0"
                 android:textColor="@color/blue_grey"
+                android:textSize="16sp"
+                android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/plusCartBtn"
                 app:layout_constraintStart_toEndOf="@+id/minusCartBtn"
                 app:layout_constraintTop_toTopOf="parent"
-                android:text="0"
 
                 />
 

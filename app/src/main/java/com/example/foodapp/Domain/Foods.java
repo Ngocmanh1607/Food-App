@@ -21,6 +21,36 @@ public class Foods implements Serializable {
 
     }
 
+    public Foods(int categoryId, String description, boolean bestFood, int id, int locationId, double price, String imagePath, int priceId, Double star, int timeId, int timeValue, String title, int numberInCart) {
+        CategoryId = categoryId;
+        Description = description;
+        BestFood = bestFood;
+        Id = id;
+        LocationId = locationId;
+        Price = price;
+        ImagePath = imagePath;
+        PriceId = priceId;
+        Star = star;
+        TimeId = timeId;
+        TimeValue = timeValue;
+        Title = title;
+    }
+
+    public Foods(int foodId, String title, String description, String imageUrl, double price, int priceId, Double star, int timeValue, int timeId, int id, boolean bestfood) {
+        Id=foodId;
+        Title=title;
+        Description=description;
+        ImagePath=imageUrl;
+        Price=price;
+        PriceId=priceId;
+        Star=star;
+        TimeValue=timeValue;
+        TimeId=timeId;
+        CategoryId=id;
+        BestFood=bestfood;
+
+    }
+
     @Override
     public String toString() {
         return  Title ;

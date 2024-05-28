@@ -8,8 +8,4 @@
         android:id="@+id/menu_listOrder"
         android:title="List order"
         android:icon="@drawable/checklist_order" />
-    <item
-        android:id="@+id/menu_statistics"
-        android:title="Statistics"
-        android:icon="@drawable/thongke" />
 </menu>

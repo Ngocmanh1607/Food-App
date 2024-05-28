@@ -65,6 +65,7 @@
                 android:background="@drawable/edittext_background"
                 android:inputType="text"
                 android:hint="@string/email_adress" />
+
             <EditText
                 android:id="@+id/passEdt"
                 android:layout_width="match_parent"

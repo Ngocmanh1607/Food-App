@@ -19,6 +19,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class DetailResActivity extends BaseActivity {
     ActivityDetailResBinding binding;
     private Foods object;
@@ -124,12 +127,12 @@ public class DetailResActivity extends BaseActivity {
             }
 
             object.setDescription(description);
-
-            // Lưu thông tin đã chỉnh sửa vào Firebase Realtime Database
             DatabaseReference foodsRef = FirebaseDatabase.getInstance().getReference("Foods");
             String foodId = String.valueOf(object.getId());
 
-            foodsRef.child(foodId).setValue(object)
+            Map<String, Object> capitalizedFoodMap = capitalizeFieldNames(object);
+
+            foodsRef.child(foodId).setValue(capitalizedFoodMap)
                     .addOnSuccessListener(aVoid -> {
                         Toast.makeText(getApplicationContext(), "Food item updated successfully", Toast.LENGTH_SHORT).show();
                         restartActivity(); // Đóng activity sau khi lưu thành công
@@ -142,6 +145,22 @@ public class DetailResActivity extends BaseActivity {
         } catch (NumberFormatException e) {
             Toast.makeText(getApplicationContext(), "Invalid input for price or time", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private Map<String, Object> capitalizeFieldNames(Foods food) {
+        Map<String, Object> foodMap = new HashMap<>();
+        foodMap.put("Id", food.getId());
+        foodMap.put("Title", food.getTitle());
+        foodMap.put("Description", food.getDescription());
+        foodMap.put("ImageUrl", food.getImagePath());
+        foodMap.put("Price", food.getPrice());
+        foodMap.put("PriceId", food.getPriceId());
+        foodMap.put("Star", food.getStar());
+        foodMap.put("TimeValue", food.getTimeValue());
+        foodMap.put("TimeId", food.getTimeId());
+        foodMap.put("CategoryId", food.getCategoryId());
+        foodMap.put("BestFood", food.isBestFood());
+        return foodMap;
     }
     private void setEnable(boolean enabled) {
         // Bật hoặc vô hiệu hóa chỉnh sửa các trường thông tin

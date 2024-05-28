@@ -6,13 +6,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.example.foodapp.R;
 import com.example.foodapp.databinding.ActivitySignupBinding;
@@ -21,17 +16,18 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-public class SignupActivity extends BaseActivity {
-    ActivitySignupBinding binding;
+public class SignupActivity extends AppCompatActivity {
+    private ActivitySignupBinding binding;
+    private FirebaseAuth mAuth;
+    private static final String TAG = "SignupActivity";
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding=ActivitySignupBinding.inflate(getLayoutInflater());
+        binding = ActivitySignupBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         mAuth = FirebaseAuth.getInstance();
 
@@ -56,15 +52,12 @@ public class SignupActivity extends BaseActivity {
                         if (task.isSuccessful()) {
                             FirebaseUser user = mAuth.getCurrentUser();
                             if (user != null) {
-                                Boolean role=false;
-                                // Save user details to Realtime Database
-                                saveUserToDatabase(user.getUid(), name, email, gender, phone, birthday,location,role);
+                                // Send email verification
+                                sendEmailVerification(user);
 
-                                Log.d(TAG, "User details saved to Realtime Database");
-
-                                // Navigate to MainActivity
-                                startActivity(new Intent(SignupActivity.this, MainActivity.class));
-                                finish(); // Finish SignupActivity after successful registration
+                                Boolean role = false;
+                                saveUserToDatabase(user.getUid(), name, email, gender, phone, birthday, location, role);
+                                startActivity(new Intent(SignupActivity.this, LoginActivity.class));
                             }
                         } else {
                             Log.e(TAG, "User registration failed", task.getException());
@@ -75,11 +68,25 @@ public class SignupActivity extends BaseActivity {
 
         binding.loginTxt.setOnClickListener(v -> {
             startActivity(new Intent(SignupActivity.this, LoginActivity.class));
-            finish(); // Finish SignupActivity if user chooses to login
+            finish();
         });
     }
 
-    private void saveUserToDatabase(String userId, String name, String email, String gender, String phone, String birthday,String location,Boolean role) {
+    private void sendEmailVerification(FirebaseUser user) {
+        if (user != null) {
+            user.sendEmailVerification()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(SignupActivity.this, "Verification email sent to " + user.getEmail(), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Log.e(TAG, "Failed to send verification email", task.getException());
+                            Toast.makeText(SignupActivity.this, "Failed to send verification email", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        }
+    }
+
+    private void saveUserToDatabase(String userId, String name, String email, String gender, String phone, String birthday, String location, Boolean role) {
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
         DatabaseReference usersRef = mDatabase.child("User").child(userId);
         usersRef.child("Role").setValue(role);

@@ -1,7 +1,10 @@
 package com.example.foodapp.Activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -17,7 +20,7 @@ public class MainResActivity extends BaseActivity {
 
     ActivityMainResBinding binding;
     private FragmentManager fragmentManager;
-
+    private TextView addFood;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,7 +30,14 @@ public class MainResActivity extends BaseActivity {
         fragmentManager = getSupportFragmentManager();
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
-
+        addFood =findViewById(R.id.addFoodBtn);
+        addFood.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent= new Intent(MainResActivity.this,AddFoodActivity.class);
+                startActivity(intent);
+            }
+        });
         // Set listener for item selection
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             Fragment selectedFragment = null;
@@ -38,9 +48,6 @@ public class MainResActivity extends BaseActivity {
                     break;
                 case R.id.menu_listOrder:
                     selectedFragment = ListOrderFragment.newInstance();
-                    break;
-                case R.id.menu_statistics:
-                    //selectedFragment = StatisticsFragment.newInstance();
                     break;
             }
 
