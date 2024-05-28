@@ -29,12 +29,12 @@
 
                 <ImageView
                     android:id="@+id/btn_user"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
+                    android:layout_width="34dp"
+                    android:layout_height="35dp"
                     android:background="@drawable/user_background"
-                    android:src="@drawable/user"/>
+                    android:src="@drawable/account_staff"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <TextView
                     android:id="@+id/textView7"

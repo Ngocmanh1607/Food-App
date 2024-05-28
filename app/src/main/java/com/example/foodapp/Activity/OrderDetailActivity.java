@@ -2,6 +2,7 @@ package com.example.foodapp.Activity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -40,6 +41,7 @@ public class OrderDetailActivity extends AppCompatActivity {
         binding=ActivityOrderDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         initList();
+        binding.backBtn.setOnClickListener(v -> finish());
     }
 
     private void initList() {

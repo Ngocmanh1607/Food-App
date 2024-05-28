@@ -152,7 +152,7 @@ public class DetailResActivity extends BaseActivity {
         foodMap.put("Id", food.getId());
         foodMap.put("Title", food.getTitle());
         foodMap.put("Description", food.getDescription());
-        foodMap.put("ImageUrl", food.getImagePath());
+        foodMap.put("ImagePath", food.getImagePath());
         foodMap.put("Price", food.getPrice());
         foodMap.put("PriceId", food.getPriceId());
         foodMap.put("Star", food.getStar());

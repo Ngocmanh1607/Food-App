@@ -2,6 +2,7 @@ package com.example.foodapp.Activity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -35,12 +36,13 @@ public class ListUserOrderActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private HistoryOrderAdapter adapter;
     private List<Order> userOrders;
+    ActivityListUserOrderBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_user_order);
-
+        binding = ActivityListUserOrderBinding.inflate(getLayoutInflater());
         userOrders = new ArrayList<>();
         recyclerView = findViewById(R.id.hisOrder);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -48,6 +50,8 @@ public class ListUserOrderActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         initList();
+        binding.backBtn.setOnClickListener(v -> finish());
+
     }
 
     private void initList() {
@@ -61,7 +65,7 @@ public class ListUserOrderActivity extends AppCompatActivity {
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()) {
                         String userName = dataSnapshot.child("Name").getValue(String.class);
-                        getUserOrdersFromFirebase(userName);
+                        getUserOrders(userName);
                     }
                 }
 
@@ -73,7 +77,7 @@ public class ListUserOrderActivity extends AppCompatActivity {
         }
     }
 
-    private void getUserOrdersFromFirebase(String userName) {
+    private void getUserOrders(String userName) {
         DatabaseReference ordersRef = FirebaseDatabase.getInstance().getReference().child("Orders");
         ordersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

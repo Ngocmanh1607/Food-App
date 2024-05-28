@@ -1,6 +1,7 @@
 package com.example.foodapp.Adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.foodapp.Activity.ListUserOrderActivity;
+import com.example.foodapp.Activity.OrderDetailActivity;
 import com.example.foodapp.Domain.Order;
 import com.example.foodapp.Domain.OrderItem;
 import com.example.foodapp.R;
@@ -21,6 +23,7 @@ import java.util.List;
 public class HistoryOrderAdapter extends RecyclerView.Adapter<HistoryOrderAdapter.ViewHolder> {
     private ArrayList<Order> items;
     private Context context;
+    private String orderId;
 
     public HistoryOrderAdapter(ArrayList<Order> items) {
         this.items = items;
@@ -42,6 +45,7 @@ public class HistoryOrderAdapter extends RecyclerView.Adapter<HistoryOrderAdapte
         holder.timeTxt.setText(order.getDateTime());
         holder.noteTxt.setText(order.getNote());
         holder.totalTxt.setText("$" + order.getTotalPrice());
+        orderId=order.getKey();
         String status = "";
 
         switch (order.getStatus()) {
@@ -57,12 +61,14 @@ public class HistoryOrderAdapter extends RecyclerView.Adapter<HistoryOrderAdapte
         }
 
         holder.statusTxt.setText(status);
-
-        // Hiển thị danh sách các món ăn trong đơn hàng bằng RecyclerView
-        List<OrderItem> orderItems = order.getlOrderItem();
-        OrderDetailAdapter itemAdapter = new OrderDetailAdapter((ArrayList<OrderItem>) orderItems);
-        itemAdapter.updateData((ArrayList<OrderItem>) orderItems);
-        holder.listItemRecyclerView.setAdapter(itemAdapter);
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(context, OrderDetailActivity.class);
+                intent.putExtra("orderId", orderId);
+                context.startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -80,7 +86,6 @@ public class HistoryOrderAdapter extends RecyclerView.Adapter<HistoryOrderAdapte
             noteTxt = itemView.findViewById(R.id.noteTxt);
             totalTxt = itemView.findViewById(R.id.totalPriceTxt);
             statusTxt = itemView.findViewById(R.id.statusTxt);
-            listItemRecyclerView = itemView.findViewById(R.id.listItemRecyclerView);
         }
     }
 }
