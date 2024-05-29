@@ -8,7 +8,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -59,11 +61,41 @@ public class UserDetailActivity extends AppCompatActivity {
             isEditing = !isEditing;
         });
 
-        binding.listOrderTxt.setOnClickListener(v -> {
-            Intent intent = new Intent(UserDetailActivity.this, ListUserOrderActivity.class);
-            startActivity(intent);
-        });
+        binding.listOrderTxt.setOnClickListener(this::showPopupMenu);
+
         binding.btnBack.setOnClickListener(v -> finish());
+    }
+
+    private void showPopupMenu(View view) {
+        // Create a PopupMenu
+        PopupMenu popupMenu = new PopupMenu(this, view);
+        // Inflate the popup menu from the XML resource
+        popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
+        // Set the click listener for menu items
+        popupMenu.setOnMenuItemClickListener(this::onMenuItemClick);
+        // Show the popup menu
+        popupMenu.show();
+    }
+
+    private boolean onMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.history_order:
+                // Handle history order click
+                startActivity(new Intent(UserDetailActivity.this, ListUserOrderActivity.class));
+                return true;
+            case R.id.favorite_food:
+                // Handle favorite food click
+                startActivity(new Intent(UserDetailActivity.this, FavouriteActivity.class));
+                return true;
+            case R.id.logout:
+                // Handle logout click
+                FirebaseAuth.getInstance().signOut();
+                startActivity(new Intent(UserDetailActivity.this, LoginActivity.class));
+                finish();
+                return true;
+            default:
+                return false;
+        }
     }
 
     private void openGallery() {
