@@ -3,25 +3,29 @@ package com.example.foodapp.Activity;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.PopupMenu;
+import android.widget.RadioButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.example.foodapp.R;
 import com.example.foodapp.databinding.ActivityUserDetailBinding;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -32,14 +36,20 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-public class UserDetailActivity extends AppCompatActivity {
-    private static final int REQUEST_CODE_PERMISSIONS = 101;
-    private static final int REQUEST_CODE_GALLERY = 102;
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
-    ActivityUserDetailBinding binding;
-    DatabaseReference userRef;
-    boolean isEditing = false; // Biến để theo dõi trạng thái chỉnh sửa
+public class UserDetailActivity extends AppCompatActivity {
+    private static final int REQUEST_CODE_GALLERY = 102;
+    private static final int LOCATION_REQUEST_CODE = 100;
+
+    private ActivityUserDetailBinding binding;
+    private DatabaseReference userRef;
+    private boolean isEditing = false;
     private Uri selectedImageUri;
+
+    private FusedLocationProviderClient fusedLocationClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,48 +57,58 @@ public class UserDetailActivity extends AppCompatActivity {
         binding = ActivityUserDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Khởi tạo FusedLocationProviderClient để sử dụng dịch vụ vị trí
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        // Khởi tạo dữ liệu người dùng từ Firebase
         initializeUserData();
 
-        binding.EditBtn.setOnClickListener(v -> {
-            if (!isEditing) {
-                binding.EditBtn.setText("Save");
+        // Thiết lập sự kiện click cho nút chỉnh sửa/lưu
+        binding.EditBtn.setOnClickListener(v -> toggleEditSave());
 
-                binding.imgUser.setOnClickListener(v1 -> openGallery());
-                change(true);
-            } else {
-                saveUserInfo();
-            }
-            isEditing = !isEditing;
-        });
-
+        // Thiết lập sự kiện click cho văn bản danh sách đơn hàng để hiển thị menu popup
         binding.listOrderTxt.setOnClickListener(this::showPopupMenu);
 
+        // Thiết lập sự kiện click cho nút quay lại để kết thúc activity
         binding.btnBack.setOnClickListener(v -> finish());
+
+        // Thiết lập sự kiện long click cho văn bản địa chỉ để lấy vị trí hiện tại
+        binding.AddressTxt.setOnLongClickListener(v -> {
+            getLocation();
+            return true;
+        });
     }
 
+    // Phương thức chuyển đổi giữa trạng thái chỉnh sửa và lưu
+    private void toggleEditSave() {
+        if (!isEditing) {
+            binding.EditBtn.setText("Save");
+            binding.imgUser.setOnClickListener(v1 -> openGallery());
+            setEditingEnabled(true);
+        } else {
+            saveUserInfo();
+        }
+        isEditing = !isEditing;
+    }
+
+    // Hiển thị menu popup khi click vào văn bản danh sách đơn hàng
     private void showPopupMenu(View view) {
-        // Create a PopupMenu
         PopupMenu popupMenu = new PopupMenu(this, view);
-        // Inflate the popup menu from the XML resource
         popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
-        // Set the click listener for menu items
         popupMenu.setOnMenuItemClickListener(this::onMenuItemClick);
-        // Show the popup menu
         popupMenu.show();
     }
 
+    // Xử lý sự kiện khi một mục trong menu popup được chọn
     private boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.history_order:
-                // Handle history order click
                 startActivity(new Intent(UserDetailActivity.this, ListUserOrderActivity.class));
                 return true;
             case R.id.favorite_food:
-                // Handle favorite food click
                 startActivity(new Intent(UserDetailActivity.this, FavouriteActivity.class));
                 return true;
             case R.id.logout:
-                // Handle logout click
                 FirebaseAuth.getInstance().signOut();
                 startActivity(new Intent(UserDetailActivity.this, LoginActivity.class));
                 finish();
@@ -98,6 +118,7 @@ public class UserDetailActivity extends AppCompatActivity {
         }
     }
 
+    // Mở thư viện ảnh để chọn ảnh mới
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, REQUEST_CODE_GALLERY);
@@ -109,26 +130,28 @@ public class UserDetailActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null) {
             selectedImageUri = data.getData();
             if (selectedImageUri != null) {
+                // Sử dụng Glide để tải và hiển thị ảnh người dùng
                 Glide.with(UserDetailActivity.this)
                         .load(selectedImageUri)
                         .error(R.drawable.account_staff)
                         .fitCenter()
-                        .transform(new CircleCrop()) // Áp dụng hình tròn cho ảnh
+                        .transform(new CircleCrop())
                         .into(binding.imgUser);
+                // Tải ảnh lên Firebase Storage
                 uploadImageToFirebaseStorage(selectedImageUri);
             }
         }
     }
 
+    // Tải ảnh lên Firebase Storage và cập nhật URL ảnh trong cơ sở dữ liệu
     private void uploadImageToFirebaseStorage(Uri imageUri) {
         if (imageUri != null) {
-            StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("UserImages/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + ".jpg");
+            StorageReference storageRef = FirebaseStorage.getInstance().getReference()
+                    .child("UserImages/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + ".jpg");
             storageRef.putFile(imageUri).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                        String imageUrl = uri.toString();
-                        // Update the image URL in the Firebase Realtime Database
-                        userRef.child("urlImg").setValue(imageUrl, (error, ref) -> {
+                        userRef.child("urlImg").setValue(uri.toString(), (error, ref) -> {
                             if (error == null) {
                                 Toast.makeText(UserDetailActivity.this, "Profile image updated successfully", Toast.LENGTH_SHORT).show();
                             } else {
@@ -147,8 +170,8 @@ public class UserDetailActivity extends AppCompatActivity {
         }
     }
 
+    // Khởi tạo dữ liệu người dùng từ Firebase
     private void initializeUserData() {
-        // Lấy UID của người dùng hiện tại
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             String userId = currentUser.getUid();
@@ -157,7 +180,7 @@ public class UserDetailActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()) {
-                        // Lấy giá trị các trường thông tin người dùng
+                        // Lấy dữ liệu người dùng từ Firebase và hiển thị trên giao diện
                         String name = dataSnapshot.child("Name").getValue(String.class);
                         String gender = dataSnapshot.child("Gender").getValue(String.class);
                         String phone = dataSnapshot.child("Phone").getValue(String.class);
@@ -166,15 +189,15 @@ public class UserDetailActivity extends AppCompatActivity {
                         String url = dataSnapshot.child("urlImg").getValue(String.class);
 
                         binding.NameTxt.setText(name);
-                        binding.GenderTxt.setText(gender);
+                        setGenderRadioButton(gender);
                         binding.PhoneTxt.setText(phone);
-                        binding.BrithdayTxt.setText(birthday);
+                        binding.BirthUserTxt.setText(birthday);
                         binding.AddressTxt.setText(location);
                         Glide.with(UserDetailActivity.this)
                                 .load(url)
                                 .error(R.drawable.account_staff)
                                 .fitCenter()
-                                .transform(new CircleCrop()) // Áp dụng hình tròn cho ảnh
+                                .transform(new CircleCrop())
                                 .into(binding.imgUser);
                     }
                 }
@@ -187,34 +210,84 @@ public class UserDetailActivity extends AppCompatActivity {
         }
     }
 
+    // Thiết lập radio button giới tính
+    private void setGenderRadioButton(String gender) {
+        if (gender != null) {
+            if (gender.equalsIgnoreCase("Male")) {
+                binding.genderRadioGroup.check(R.id.maleRadioButton);
+            } else if (gender.equalsIgnoreCase("Female")) {
+                binding.genderRadioGroup.check(R.id.femaleRadioButton);
+            }
+        }
+    }
+
+    // Lưu thông tin người dùng vào Firebase
     private void saveUserInfo() {
-        // Lấy các giá trị mới từ các EditText
         String newName = binding.NameTxt.getText().toString();
-        String newGender = binding.GenderTxt.getText().toString();
+        RadioButton selectedGenderButton = findViewById(binding.genderRadioGroup.getCheckedRadioButtonId());
+        String newGender = selectedGenderButton != null ? selectedGenderButton.getText().toString() : "";
         String newPhone = binding.PhoneTxt.getText().toString();
-        String newBirthday = binding.BrithdayTxt.getText().toString();
+        String newBirthday = binding.BirthUserTxt.getText().toString();
         String newLocation = binding.AddressTxt.getText().toString();
 
-        // Cập nhật các trường thông tin của người dùng trên Firebase
         userRef.child("Name").setValue(newName);
         userRef.child("Gender").setValue(newGender);
         userRef.child("Phone").setValue(newPhone);
         userRef.child("Birthday").setValue(newBirthday);
         userRef.child("Location").setValue(newLocation);
 
-        // Thông báo cập nhật thành công
         Toast.makeText(UserDetailActivity.this, "Profile updated successfully", Toast.LENGTH_SHORT).show();
 
-        // Chuyển về chế độ chỉnh sửa
-        binding.EditBtn.setText("Edit");
-        change(false);
+        binding.EditBtn.setText(R.string.edit);
+        setEditingEnabled(false);
     }
 
-    private void change(boolean text) {
-        binding.NameTxt.setEnabled(text);
-        binding.PhoneTxt.setEnabled(text);
-        binding.GenderTxt.setEnabled(text);
-        binding.AddressTxt.setEnabled(text);
-        binding.BrithdayTxt.setEnabled(text);
+    // Thiết lập các trường có thể chỉnh sửa
+    private void setEditingEnabled(boolean enabled) {
+        binding.NameTxt.setEnabled(enabled);
+        binding.PhoneTxt.setEnabled(enabled);
+        binding.BirthUserTxt.setEnabled(enabled);
+        binding.AddressTxt.setEnabled(enabled);
+        binding.genderRadioGroup.setEnabled(enabled);
+        for (int i = 0; i < binding.genderRadioGroup.getChildCount(); i++) {
+            binding.genderRadioGroup.getChildAt(i).setEnabled(enabled);
+        }
+    }
+
+    // Phương thức lấy vị trí hiện tại
+    private void getLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
+            return;
+        }
+        fusedLocationClient.getLastLocation().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                Location location = task.getResult();
+                getAddressFromLocation(location.getLatitude(), location.getLongitude());
+            } else {
+                Toast.makeText(UserDetailActivity.this, "Unable to get current location", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Lấy địa chỉ từ vị trí (vĩ độ và kinh độ)
+    private void getAddressFromLocation(double latitude, double longitude) {
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
+            if (addresses != null && !addresses.isEmpty()) {
+                Address address = addresses.get(0);
+                StringBuilder addressStringBuilder = new StringBuilder();
+                for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
+                    addressStringBuilder.append(address.getAddressLine(i)).append("\n");
+                }
+                binding.AddressTxt.setText(addressStringBuilder.toString());
+            } else {
+                binding.AddressTxt.setText("Address not found.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            binding.AddressTxt.setText("Unable to get address.");
+        }
     }
 }

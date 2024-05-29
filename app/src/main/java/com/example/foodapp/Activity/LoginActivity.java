@@ -90,6 +90,10 @@ public class LoginActivity extends BaseActivity {
                 Toast.makeText(LoginActivity.this, "Please enter your email", Toast.LENGTH_SHORT).show();
             }
         });
+        binding.signupTxt.setOnClickListener(v -> {
+            startActivity(new Intent(LoginActivity.this, SignupActivity.class));
+            finish();
+        });
     }
 
     @Override
