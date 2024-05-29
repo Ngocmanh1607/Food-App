@@ -25,6 +25,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ public class OrderDetailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding=ActivityOrderDetailBinding.inflate(getLayoutInflater());
+        binding = ActivityOrderDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         initList();
         binding.backBtn.setOnClickListener(v -> finish());
@@ -46,31 +47,39 @@ public class OrderDetailActivity extends AppCompatActivity {
 
     private void initList() {
         // Lấy thông tin đơn hàng từ intent
-        String orderId = getIntent().getStringExtra("orderId");
-        if (orderId != null) {
-            DatabaseReference orderRef = FirebaseDatabase.getInstance().getReference("Orders").child(orderId);
-            orderRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        String orderKey = getIntent().getStringExtra("orderKey");
+        if (orderKey != null) {
+            Query orderQuery = FirebaseDatabase.getInstance().getReference("Orders").orderByChild("key").equalTo(orderKey);
+            orderQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.exists()) {
+                        DataSnapshot orderSnapshot = snapshot.getChildren().iterator().next();
 
                         // Lấy danh sách các món ăn từ đơn hàng
                         ArrayList<OrderItem> orderItemList = new ArrayList<>();
-                        for (DataSnapshot itemSnapshot : snapshot.child("lOrderItem").getChildren()) {
+                        for (DataSnapshot itemSnapshot : orderSnapshot.child("lOrderItem").getChildren()) {
                             // Lấy thông tin của mỗi món ăn từ Snapshot
                             String itemName = itemSnapshot.child("name").getValue(String.class);
-                            int quantity = itemSnapshot.child("quantity").getValue(Integer.class);
+                            Integer quantity = itemSnapshot.child("quantity").getValue(Integer.class);
                             String imagePath = itemSnapshot.child("imagePath").getValue(String.class);
 
-                            // Tạo đối tượng OrderItem từ thông tin lấy được
-                            OrderItem orderItem = new OrderItem(itemName, quantity, imagePath);
-                            orderItemList.add(orderItem);
+                            // Kiểm tra các giá trị không null trước khi thêm vào danh sách
+                            if (itemName != null && quantity != null && imagePath != null) {
+                                // Tạo đối tượng OrderItem từ thông tin lấy được
+                                OrderItem orderItem = new OrderItem(itemName, quantity, imagePath);
+                                orderItemList.add(orderItem);
+                            } else {
+                                Log.e("OrderDetailActivity", "Invalid order item data: " + itemSnapshot.toString());
+                            }
                         }
 
                         // Đổ danh sách các món ăn vào RecyclerView
                         adapter = new OrderDetailAdapter(orderItemList);
                         binding.orderDetail.setLayoutManager(new LinearLayoutManager(OrderDetailActivity.this));
                         binding.orderDetail.setAdapter(adapter);
+                    } else {
+                        Log.e("OrderDetailActivity", "Order not found with key: " + orderKey);
                     }
                 }
 
@@ -80,7 +89,8 @@ public class OrderDetailActivity extends AppCompatActivity {
                     Log.e("FirebaseError", "Database error: " + error.getMessage());
                 }
             });
+        } else {
+            Log.e("OrderDetailActivity", "Order key is null");
         }
     }
-
 }

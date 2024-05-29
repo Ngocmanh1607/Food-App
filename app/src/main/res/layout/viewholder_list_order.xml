@@ -219,10 +219,9 @@
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@+id/rejectBtn"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toStartOf="@+id/rejectBtn"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.698" />
+                app:layout_constraintVertical_bias="0.546" />
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/rejectBtn"
@@ -231,7 +230,7 @@
                 android:layout_height="30dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="16dp"
-                android:layout_marginBottom="28dp"
+                android:layout_marginBottom="44dp"
                 android:background="@drawable/red_button_background"
                 android:text="Reject"
                 android:textColor="@color/white"

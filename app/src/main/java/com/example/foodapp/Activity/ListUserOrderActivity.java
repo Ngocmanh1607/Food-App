@@ -64,8 +64,8 @@ public class ListUserOrderActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()) {
-                        String userName = dataSnapshot.child("Name").getValue(String.class);
-                        getUserOrders(userName);
+                        String key = dataSnapshot.getKey();
+                        getUserOrders(key);
                     }
                 }
 
@@ -77,7 +77,7 @@ public class ListUserOrderActivity extends AppCompatActivity {
         }
     }
 
-    private void getUserOrders(String userName) {
+    private void getUserOrders(String key) {
         DatabaseReference ordersRef = FirebaseDatabase.getInstance().getReference().child("Orders");
         ordersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -85,9 +85,9 @@ public class ListUserOrderActivity extends AppCompatActivity {
                 userOrders.clear();
 
                 for (DataSnapshot orderSnapshot : dataSnapshot.getChildren()) {
-                    String orderUserName = orderSnapshot.child("userName").getValue(String.class);
+                    String orderUser = orderSnapshot.child("key").getValue(String.class);
 
-                    if (orderUserName != null && orderUserName.equals(userName)) {
+                    if (orderUser != null && orderUser.equals(key)) {
                         Order order = orderSnapshot.getValue(Order.class);
                         if (order != null) {
                             userOrders.add(order);

@@ -23,7 +23,7 @@ import java.util.List;
 public class HistoryOrderAdapter extends RecyclerView.Adapter<HistoryOrderAdapter.ViewHolder> {
     private ArrayList<Order> items;
     private Context context;
-    private String orderId;
+    private String orderKey;
 
     public HistoryOrderAdapter(ArrayList<Order> items) {
         this.items = items;
@@ -45,7 +45,7 @@ public class HistoryOrderAdapter extends RecyclerView.Adapter<HistoryOrderAdapte
         holder.timeTxt.setText(order.getDateTime());
         holder.noteTxt.setText(order.getNote());
         holder.totalTxt.setText("$" + order.getTotalPrice());
-        orderId=order.getKey();
+        orderKey=order.getKey();
         String status = "";
 
         switch (order.getStatus()) {
@@ -65,7 +65,7 @@ public class HistoryOrderAdapter extends RecyclerView.Adapter<HistoryOrderAdapte
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(context, OrderDetailActivity.class);
-                intent.putExtra("orderId", orderId);
+                intent.putExtra("orderKey",orderKey);
                 context.startActivity(intent);
             }
         });

@@ -105,13 +105,23 @@ public class CartActivity extends AppCompatActivity {
                             String userName = dataSnapshot.child("Name").getValue(String.class);
                             String phone = dataSnapshot.child("Phone").getValue(String.class);
                             String location = dataSnapshot.child("Location").getValue(String.class);
+                            String key_user = dataSnapshot.getKey();
+
+                            if (userName == null || phone == null || location == null) {
+                                Log.e("CartActivity", "User data is incomplete.");
+                                Toast.makeText(CartActivity.this, "User data is incomplete. Please update your profile!", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
 
                             Order order = new Order();
                             order.setUserName(userName);
                             order.setPhone(phone);
                             order.setLocation(location);
                             order.setStatus(Order.Status.PENDING);
-                            order.setNote(binding.noteTxt.getText().toString());
+
+                            String note = binding.noteTxt.getText().toString();
+                            order.setNote(note != null ? note : ""); // Ensure note is not null
+
                             // Lấy danh sách món ăn từ giỏ hàng
                             List<Foods> cartItems = managmentCart.getListCart();
 
@@ -119,22 +129,24 @@ public class CartActivity extends AppCompatActivity {
                             List<OrderItem> orderItems = new ArrayList<>();
                             for (Foods item : cartItems) {
                                 // Tạo đối tượng OrderItem với thông tin tên, số lượng và ngày giờ đặt hàng
-                                OrderItem orderItem = new OrderItem(item.getTitle(), item.getNumberInCart(),item.getImagePath());
+                                OrderItem orderItem = new OrderItem(item.getTitle(), item.getNumberInCart(), item.getImagePath());
                                 orderItems.add(orderItem);
                             }
                             order.setlOrderItem(orderItems);
-                            order.setTotalPrice(total);
+                            order.setTotalPrice(total); // Ensure 'total' is properly calculated and non-null
+
                             String currentDateTime = getCurrentDateTime();
                             order.setDateTime(currentDateTime);
+
                             // Tham chiếu đến Firebase Realtime Database và lưu đơn hàng
                             DatabaseReference ordersRef = FirebaseDatabase.getInstance().getReference().child("Orders");
                             String orderId = ordersRef.push().getKey();
-                            order.setKey(orderId);
+                            order.setKey(key_user);
+
                             if (orderId != null) {
                                 ordersRef.child(orderId).setValue(order)
                                         .addOnSuccessListener(aVoid -> {
-                                            managmentCart.clearCart();
-
+                                            managmentCart.clearCart(); // Ensure clearCart is thread-safe
                                             Toast.makeText(CartActivity.this, "Order placed successfully!", Toast.LENGTH_SHORT).show();
 
                                             Intent intent = new Intent(CartActivity.this, MainActivity.class);
@@ -145,6 +157,9 @@ public class CartActivity extends AppCompatActivity {
                                             Log.e("CartActivity", "Failed to place order: " + e.getMessage());
                                             Toast.makeText(CartActivity.this, "Failed to place order. Please try again!", Toast.LENGTH_SHORT).show();
                                         });
+                            } else {
+                                Log.e("CartActivity", "Failed to generate order ID.");
+                                Toast.makeText(CartActivity.this, "Failed to place order. Please try again!", Toast.LENGTH_SHORT).show();
                             }
                         } else {
                             Log.e("CartActivity", "User data not found in Firebase Realtime Database.");
@@ -166,6 +181,7 @@ public class CartActivity extends AppCompatActivity {
         } else {
             Toast.makeText(CartActivity.this, "Your cart is empty!", Toast.LENGTH_SHORT).show();
         }
+
     }
     private String getCurrentDateTime() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
